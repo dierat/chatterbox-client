@@ -1,7 +1,24 @@
 // YOUR CODE HERE:
 
 var app = {
-  server: 'https://api.parse.com/1/classes/chatterbox'
+  server: 'https://api.parse.com/1/classes/chatterbox',
+  timeStamp: new Date("October 13, 1976 11:13:00")
+};
+
+// Use the browser's built-in functionality to quickly and safely escape the
+// string
+var escapeHtml = function (str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+};
+ 
+// UNSAFE with unsafe strings; only use on previously-escaped ones!
+var unescapeHtml = function (escapedStr) {
+    var div = document.createElement('div');
+    div.innerHTML = escapedStr;
+    var child = div.childNodes[0];
+    return child ? child.nodeValue : '';
 };
 
 // makes a new room?
@@ -25,41 +42,53 @@ app.send = function(data){
 };
 
 app.fetch = function(){
-  $.get('https://api.parse.com/1/classes/chatterbox', function(data, status){
-    console.log("get request sent! received ", JSON.stringify(data), " and ", status);
-    var messages = data.results;
-    for (var i = 0; i < messages.length; i++) {
-      //create escaping function
-      var escaper = function(str){
-        //split string into an array, 
-        var split = str.split('');
-        //then loop over array
-        _.map(split, function(c, i, split){
-        //get char code and replace in array
-          return '' + c.charCodeAt(0) + '';
-        });
-        //rejoin and return
-        return split.join('');
-      }
 
-      console.log(escaper('Hailey!!!><*& &^$*% Foster????'));
+  var readyState = $.get('https://api.parse.com/1/classes/chatterbox', function(data, status){
 
-      var message = $('.allMessages').append('<div class = "message">');
-      var userName = $(('<span class = "userName">@'+ messages[i].username+'</span>'));
-      var dateCreated = $(('<span class = "dateCreated">'+ messages[i].dateCreated+'</span>'));
-      var updatedAt = $(('<span class = "updatedAt">'+ messages[i].updatedAt+'</span>'));
-      var text = $(('<span class = "text">'+ messages[i].text+'</span>'));
-      message.append(userName, userName, dateCreated,updatedAt,text);
-    }
+    app.messages = data.results;
 
+    // console.log("data = ", data);
+    return data.results;
   });
 };
 
 app.clearMessages = function(){};
 
-app.addMessage = function(){};
+app.addMessage = function(){
+
+  console.log("app.messages = ", app.messages);
+//need to get dates to compare with each other
+
+// their date comes in this format: 2015-07-14T03:16:38.685Z
+
+  for (var i = 0; i < app.messages.length; i++) {
+    var dateString = new Date(app.messages[i].createdAt);
+    if (dateString > app.timeStamp){
+      
+      var message = $('.allMessages').append('<div class = "message">');
+
+      var userName = '@' + escapeHtml( app.messages[i].username );
+      userName = $(('<span class = "userName">' + userName + '</span>'));
+      var dateCreated = escapeHtml( app.messages[i].createdAt );
+      dateCreated = $(('<span class = "dateCreated">'+ dateCreated +'</span>'));
+      var updatedAt = escapeHtml( app.messages[i].updatedAt );
+      updatedAt = $(('<span class = "updatedAt">' + updatedAt +'</span>'));
+      var text = escapeHtml( app.messages[i].text );
+      text = $(('<span class = "text">' + text + '</span>'));
+      message.append(userName, userName, dateCreated,updatedAt,text);
+    }
+  }
+
+  app.timeStamp = new Date();
+};
 
 app.addRoom = function(){};
+
+setInterval(function(){
+  app.fetch();
+}, 1500);
+
+
 
 
 // var $newdiv1 = $( "<div id='object1'/>" )

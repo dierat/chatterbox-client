@@ -85,4 +85,8 @@ form input[type=text] {
 
 .message, span {
     padding: 5px
-    }
+}
+
+.allMessages {
+    overflow: scroll;
+}
